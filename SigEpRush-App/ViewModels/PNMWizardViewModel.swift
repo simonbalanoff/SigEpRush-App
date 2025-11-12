@@ -14,17 +14,35 @@ final class PNMWizardViewModel: ObservableObject {
     @Published var firstName = ""
     @Published var lastName = ""
     @Published var preferredName = ""
-    @Published var classYear = ""
     @Published var major = ""
     @Published var gpa = ""
     @Published var image: UIImage?
     @Published var step = 0
     @Published var saving = false
     @Published var error: String?
+    @Published private(set) var baseGradYear: Int = 0
+    @Published var gradYearDelta: Int = 0
+
+    init() {
+        baseGradYear = PNMWizardViewModel.computeBaseGradYear()
+    }
+
+    var classYearComputed: Int? {
+        baseGradYear == 0 ? nil : baseGradYear + gradYearDelta
+    }
 
     var canNextFromInfo: Bool {
         !firstName.trimmingCharacters(in: .whitespaces).isEmpty &&
         !lastName.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    static func computeBaseGradYear() -> Int {
+        let cal = Calendar.current
+        let now = Date()
+        let year = cal.component(.year, from: now)
+        let month = cal.component(.month, from: now)
+        let add = (1...4).contains(month) ? 3 : 4
+        return year + add
     }
 
     func submit(api: APIClient) async -> PNM? {
@@ -34,7 +52,7 @@ final class PNMWizardViewModel: ObservableObject {
             firstName: firstName.trimmingCharacters(in: .whitespaces),
             lastName: lastName.trimmingCharacters(in: .whitespaces),
             preferredName: preferredName.isEmpty ? nil : preferredName,
-            classYear: Int(classYear),
+            classYear: classYearComputed,
             major: major.isEmpty ? nil : major,
             gpa: Double(gpa),
             phone: nil,

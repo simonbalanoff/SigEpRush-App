@@ -40,7 +40,11 @@ struct PNMListView: View {
             .task { await vm.load(api: api) }
             .refreshable { await vm.load(api: api) }
             .onChange(of: vm.q) { Task { await vm.load(api: api) } }
-            .sheet(isPresented: $showAdd) { CreatePNMSheet(onCreate: { await vm.load(api: api) }) }
+            .fullScreenCover(isPresented: $showAdd) {
+                AddPNMWizard { _ in
+                    Task { await vm.load(api: api) }
+                }
+            }
         }
     }
 }
