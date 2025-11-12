@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct SigEpRush_AppApp: App {
+    @StateObject var auth = AuthStore()
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppRoot()
+                .enviromentObject(auth)
+                .enviromentObject(APIClient(auth: auth))
         }
     }
 }
