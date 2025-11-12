@@ -6,3 +6,35 @@
 //
 
 import Foundation
+import UIKit
+
+struct S3Uploader {
+    static func uploadJPEG(data: Data, presign: PresignResp) async throws {
+        var req = URLRequest(url: URL(string: presign.url)!)
+        req.httpMethod = "POST"
+        let boundary = UUID().uuidString
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        var body = Data()
+        
+        func addField(_ name: String, _ value: String) {
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
+            body.append("\(value)\r\n".data(using: .utf8)!)
+        }
+        
+        for (k,v) in presign.fields { addField(k, v) }
+        
+        addField("Content-Type", "image/jpeg")
+        
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"photo.jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(data)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        req.httpBody = body
+        
+        let (_, resp) = try await URLSession.shared.data(for: req)
+        
+        guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { throw URLError(.cannotCreateFile) }
+    }
+}
