@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Aggregate: Codable {
+struct Aggregate: Codable, Hashable {
     let avgScore: Double?
     let distScore: [String:Int]?
     let countRatings: Int?

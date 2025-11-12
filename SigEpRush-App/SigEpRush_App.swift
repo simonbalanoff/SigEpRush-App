@@ -13,8 +13,8 @@ struct SigEpRush_AppApp: App {
     var body: some Scene {
         WindowGroup {
             AppRoot()
-                .enviromentObject(auth)
-                .enviromentObject(APIClient(auth: auth))
+                .environmentObject(auth)
+                .environmentObject(APIClient(auth: auth))
         }
     }
 }
