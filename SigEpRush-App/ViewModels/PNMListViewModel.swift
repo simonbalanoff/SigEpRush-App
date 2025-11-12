@@ -13,10 +13,10 @@ final class PNMListViewModel: ObservableObject {
     @Published var items: [PNM] = []
     @Published var q = ""
     @Published var loading = false
-    func load(api: APIClient) async {
-        if loading { return }
+
+    func load(api: APIClient, termId: String) async {
         loading = true
         defer { loading = false }
-        do { items = try await api.listPNMs(q: q) } catch { }
+        do { items = try await api.pnms(termId: termId, q: q) } catch {}
     }
 }

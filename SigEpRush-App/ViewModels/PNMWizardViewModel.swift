@@ -23,13 +23,9 @@ final class PNMWizardViewModel: ObservableObject {
     @Published private(set) var baseGradYear: Int = 0
     @Published var gradYearDelta: Int = 0
 
-    init() {
-        baseGradYear = PNMWizardViewModel.computeBaseGradYear()
-    }
+    init() { baseGradYear = Self.computeBaseGradYear() }
 
-    var classYearComputed: Int? {
-        baseGradYear == 0 ? nil : baseGradYear + gradYearDelta
-    }
+    var classYearComputed: Int? { baseGradYear + gradYearDelta }
 
     var canNextFromInfo: Bool {
         !firstName.trimmingCharacters(in: .whitespaces).isEmpty &&
@@ -38,14 +34,12 @@ final class PNMWizardViewModel: ObservableObject {
 
     static func computeBaseGradYear() -> Int {
         let cal = Calendar.current
-        let now = Date()
-        let year = cal.component(.year, from: now)
-        let month = cal.component(.month, from: now)
-        let add = (1...4).contains(month) ? 3 : 4
-        return year + add
+        let year = cal.component(.year, from: Date())
+        let month = cal.component(.month, from: Date())
+        return year + ((1...4).contains(month) ? 3 : 4)
     }
 
-    func submit(api: APIClient) async -> PNM? {
+    func submit(termId: String, api: APIClient) async -> PNM? {
         saving = true
         defer { saving = false }
         let payload = PNMCreate(
@@ -59,11 +53,11 @@ final class PNMWizardViewModel: ObservableObject {
             status: "new"
         )
         do {
-            var created = try await api.createPNM(payload)
+            var created = try await api.createPNM(termId: termId, payload: payload)
             if let img = image, let data = img.jpegData(compressionQuality: 0.9) {
-                let key = "pnm/\(created.id).jpg"
+                let key = "pnm/\(created.termId)/\(created.id).jpg"
                 let presign = try await api.presign(contentType: "image/jpeg", key: key)
-                try await S3Uploader.uploadJPEG(data: data, presign: presign)
+                try await Uploader.uploadJPEG(data: data, presign: presign)
                 let url = try await api.attachPhoto(pnmId: created.id, key: presign.key)
                 created.photoURL = url
             }

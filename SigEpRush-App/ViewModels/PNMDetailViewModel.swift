@@ -6,25 +6,41 @@
 //
 
 import Foundation
-import UIKit
 import Combine
 
 @MainActor
 final class PNMDetailViewModel: ObservableObject {
-    @Published var pnm: PNM
-    init(initial: PNM) { self.pnm = initial }
-    func rate(api: APIClient, id: String, score: Int, comment: String?) async {
-        try? await api.ratePNM(id: id, score: score, comment: comment)
+    @Published var ratings: [RatingItem] = []
+    @Published var myScore: Int = 5
+    @Published var myComment: String = ""
+    @Published var sending = false
+
+    func load(api: APIClient, pnmId: String) async {
+        do { ratings = try await api.ratings(pnmId: pnmId) } catch {}
     }
-    func addPhoto(api: APIClient, id: String, image: UIImage) async {
-        guard let data = image.jpegData(compressionQuality: 0.9) else { return }
-        let fixedKey = "pnm/\(id).jpg"
-        guard let presign = try? await api.presign(contentType: "image/jpeg", key: fixedKey) else { return }
-        try? await S3Uploader.uploadJPEG(data: data, presign: presign)
-        if let url = try? await api.attachPhoto(pnmId: id, key: presign.key) {
-            var copy = pnm
-            copy.photoURL = url
-            pnm = copy
-        }
+
+    func submit(api: APIClient, pnmId: String) async {
+        sending = true
+        defer { sending = false }
+        do {
+            try await api.upsertRating(pnmId: pnmId, score: myScore, comment: myComment.isEmpty ? nil : myComment)
+            try await Task.sleep(nanoseconds: 150_000_000)
+            ratings = try await api.ratings(pnmId: pnmId)
+        } catch {}
+    }
+
+    func toggleReaction(api: APIClient, rating: RatingItem, emoji: String) async {
+        do {
+            let mine = Set(rating.myReactions)
+            let updated = try await (mine.contains(emoji) ? api.unreact(ratingId: rating.id, emoji: emoji) : api.react(ratingId: rating.id, emoji: emoji))
+            if let i = ratings.firstIndex(where: { $0.id == rating.id }) {
+                var r = ratings[i]
+                var mr = Set(r.myReactions)
+                if mr.contains(emoji) { mr.remove(emoji) } else { mr.insert(emoji) }
+                r.myReactions = Array(mr)
+                r.reactions = updated
+                ratings[i] = r
+            }
+        } catch {}
     }
 }

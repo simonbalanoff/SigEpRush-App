@@ -16,6 +16,7 @@ struct Aggregate: Codable, Hashable {
 
 struct PNM: Codable, Identifiable, Hashable {
     let id: String
+    var termId: String
     var firstName: String
     var lastName: String
     var preferredName: String?
@@ -28,10 +29,6 @@ struct PNM: Codable, Identifiable, Hashable {
     var aggregate: Aggregate?
 }
 
-struct PNMListResp: Codable {
-    let items: [PNM]
-}
-
 struct PNMCreate: Encodable {
     let firstName: String
     let lastName: String
@@ -39,17 +36,6 @@ struct PNMCreate: Encodable {
     let classYear: Int?
     let major: String?
     let gpa: Double?
-    let phone: String?
-    let status: String?
-}
-
-struct PNMPatch: Encodable {
-    let firstName: String?
-    let lastName: String?
-    let preferredName: String?
-    let classYear: Int?
-    let major: String?
-    let gpa: String?
     let phone: String?
     let status: String?
 }
