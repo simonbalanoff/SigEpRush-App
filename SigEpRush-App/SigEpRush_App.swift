@@ -10,11 +10,13 @@ import SwiftUI
 @main
 struct SigEpRush_AppApp: App {
     @StateObject var auth = AuthStore()
+    @StateObject var ui = AppUIState()
     var body: some Scene {
         WindowGroup {
             AppRoot()
                 .environmentObject(auth)
                 .environmentObject(APIClient(auth: auth))
+                .environmentObject(ui)
         }
     }
 }

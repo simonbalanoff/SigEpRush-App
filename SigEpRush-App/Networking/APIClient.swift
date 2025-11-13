@@ -61,6 +61,18 @@ final class APIClient: ObservableObject {
         guard http.statusCode == 200 else { throw URLError(.badServerResponse) }
         return try JSONDecoder().decode(JoinTermResp.self, from: d)
     }
+    
+    func adminTerms() async throws -> [TermAdminItem] {
+        let (d, http) = try await request("terms/admin")
+        guard http.statusCode == 200 else { throw URLError(.badServerResponse) }
+        struct Resp: Codable { let items: [TermAdminItem] }
+        return try JSONDecoder().decode(Resp.self, from: d).items
+    }
+
+    func setTermActive(termId: String, active: Bool) async throws {
+        let (_, http) = try await request("terms/\(termId)", method: "PATCH", body: ["isActive": active])
+        guard http.statusCode == 200 else { throw URLError(.badServerResponse) }
+    }
 
     func pnms(termId: String, q: String = "") async throws -> [PNM] {
         var path = "terms/\(termId)/pnms"

@@ -9,12 +9,12 @@ import Foundation
 
 struct RatingItem: Codable, Identifiable, Hashable {
     let id: String
-    let score: Int
-    let comment: String?
-    let rater: Rater?
-    let updatedAt: String
-    let reactions: [String:Int]
-    let myReactions: [String]
+    var score: Int
+    var comment: String?
+    var rater: Rater?
+    var updatedAt: String
+    var reactions: [String:Int]
+    var myReactions: [String]
     struct Rater: Codable, Hashable {
         let id: String
         let name: String

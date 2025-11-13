@@ -11,7 +11,6 @@ struct TermSummary: Codable, Identifiable, Hashable {
     let termId: String
     let name: String
     let code: String
-    let role: String
     let joinedAt: String
     var id: String { termId }
 }
