@@ -35,54 +35,124 @@ struct TermsHomeView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 8) {
-                HStack(spacing: 8) {
-                    TextField("Search terms", text: $search)
-                        .textFieldStyle(.roundedBorder)
-                    HStack(spacing: 8) {
-                        layoutIcon(mode: .list, systemName: "list.bullet")
-                        layoutIcon(mode: .grid, systemName: "square.grid.2x2")
-                    }
-                }
-                .padding(.horizontal)
+            ZStack {
+                Color(.systemGroupedBackground)
+                    .ignoresSafeArea()
 
-                Group {
-                    if loading {
-                        LoadingOverlay()
-                    } else if filteredTerms.isEmpty {
-                        if terms.isEmpty {
-                            EmptyStateView(
-                                title: "No Terms",
-                                message: "Join a term to get started."
-                            ) {
-                                showJoin = true
+                VStack(spacing: 12) {
+                    VStack(spacing: 6) {
+                        HStack(spacing: 10) {
+                            Image("SigEpCrest")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 42, height: 42)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("SigEp Rush")
+                                    .font(.headline.weight(.semibold))
+                                Text("Terms")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+                            
+                            HStack(spacing: 8) {
+                                layoutIcon(mode: .list, systemName: "list.bullet")
+
+                                layoutIcon(mode: .grid, systemName: "square.grid.2x2")
+
+                                Button {
+                                    showJoin = true
+                                } label: {
+                                    Image(systemName: "plus")
+                                        .imageScale(.medium)
+                                        .frame(width: 32, height: 32)
+                                        .foregroundStyle(SigEpTheme.purple)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .fill(Color(.systemBackground))
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                                        )
+                                }
+
+                                Button {
+                                    ui.showSettings = true
+                                } label: {
+                                    Image(systemName: "gearshape.fill")
+                                        .imageScale(.medium)
+                                        .frame(width: 32, height: 32)
+                                        .foregroundStyle(SigEpTheme.purple)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .fill(Color(.systemBackground))
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                                        )
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 8)
+                        .padding(.bottom, 8)
+
+                        HStack(spacing: 12) {
+                            HStack {
+                                Image(systemName: "magnifyingglass")
+                                    .foregroundStyle(.secondary)
+                                TextField("Search terms", text: $search)
+                                    .textInputAutocapitalization(.never)
+                                    .autocorrectionDisabled(true)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 10)
+                            .background(Color(.systemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(SigEpTheme.purple.opacity(0.3), lineWidth: 1)
+                            )
+                            .frame(maxWidth: .infinity)
+
+                            
+                        }
+                        .padding(.horizontal)
+                    }
+
+                    Group {
+                        if loading {
+                            LoadingOverlay()
+                        } else if filteredTerms.isEmpty {
+                            if terms.isEmpty {
+                                EmptyStateView(
+                                    title: "No Terms",
+                                    message: "Join a term to get started."
+                                ) {
+                                    showJoin = true
+                                }
+                            } else {
+                                EmptyStateView(
+                                    title: "No Matches",
+                                    message: "Try a different search."
+                                )
                             }
                         } else {
-                            EmptyStateView(
-                                title: "No Matches",
-                                message: "Try a different search."
-                            )
-                        }
-                    } else {
-                        switch layoutMode {
-                        case .list:
-                            listView
-                        case .grid:
-                            gridView
+                            switch layoutMode {
+                            case .list:
+                                listView
+                            case .grid:
+                                gridView
+                            }
                         }
                     }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            .navigationTitle("Rush Terms")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { showJoin = true } label: {
-                        Image(systemName: "folder.badge.plus")
-                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
-            .toolbarSettingsButton()
             .task(id: ui.termsRefreshKey) {
                 await loadTerms()
             }
@@ -96,6 +166,7 @@ struct TermsHomeView: View {
                 TermWorkspaceView(term: t)
             }
         }
+        .tint(SigEpTheme.purple)
     }
 
     func layoutIcon(mode: TermLayoutMode, systemName: String) -> some View {
@@ -104,10 +175,18 @@ struct TermsHomeView: View {
         } label: {
             Image(systemName: systemName)
                 .imageScale(.medium)
-                .padding(8)
-                .background(layoutMode == mode ? Color.gray.opacity(0.2) : Color.clear)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .frame(width: 28, height: 28)
+                .foregroundStyle(layoutMode == mode ? SigEpTheme.purple : .secondary)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(layoutMode == mode ? SigEpTheme.purple.opacity(0.12) : Color.clear)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(layoutMode == mode ? SigEpTheme.purple.opacity(0.6) : Color.clear, lineWidth: 1)
+                )
         }
+        .buttonStyle(.plain)
     }
 
     var listView: some View {
@@ -117,16 +196,23 @@ struct TermsHomeView: View {
                     selected = t
                 } label: {
                     HStack {
-                        VStack(alignment: .leading) {
-                            Text(t.name).font(.headline)
-                            Text(t.code).foregroundStyle(.secondary).font(.subheadline)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(t.name)
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+                            Text(t.code)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
                         }
                         Spacer()
                     }
+                    .padding(.vertical, 4)
                 }
+                .listRowBackground(Color(.systemBackground))
             }
         }
-        .listStyle(.plain)
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
     }
 
     var gridView: some View {
@@ -140,6 +226,7 @@ struct TermsHomeView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(t.name)
                                 .font(.headline)
+                                .foregroundStyle(.primary)
                                 .multilineTextAlignment(.leading)
                             Text(t.code)
                                 .font(.subheadline)
@@ -147,12 +234,14 @@ struct TermsHomeView: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
-                        .background(Color(.secondarySystemBackground))
+                        .background(Color(.systemBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
                     }
                 }
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.top, 4)
         }
     }
 
@@ -164,4 +253,19 @@ struct TermsHomeView: View {
             terms = all.filter { $0.active }
         } catch {}
     }
+}
+
+#Preview("Terms Home") {
+    let auth = AuthStore()
+    auth.accessToken = "demo"
+
+    let api = APIClient(auth: auth)
+    let ui = AppUIState()
+
+    let view = TermsHomeView()
+        .environmentObject(auth)
+        .environmentObject(api)
+        .environmentObject(ui)
+
+    return NavigationStack { view }
 }

@@ -28,6 +28,21 @@ struct AppRoot: View {
                 TermsHomeView()
             }
         }
-        .fullScreenCover(isPresented: .constant(false)) { EmptyView() }
+        .fullScreenCover(isPresented: $ui.showSettings) { SettingsView() }
     }
+}
+
+#Preview("App Root") {
+    let auth = AuthStore()
+    auth.accessToken = "demo"
+
+    let api = APIClient(auth: auth)
+    let ui = AppUIState()
+
+    let view = AppRoot()
+        .environmentObject(auth)
+        .environmentObject(api)
+        .environmentObject(ui)
+
+    return NavigationStack { view }
 }

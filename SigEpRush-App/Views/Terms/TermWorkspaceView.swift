@@ -12,10 +12,10 @@ extension EnvironmentValues { var termId: String { get { self[TermIdKey.self] } 
 
 struct TermWorkspaceView: View {
     let term: TermSummary
+
     var body: some View {
         PNMListView(term: term)
             .environment(\.termId, term.termId)
-            .navigationTitle(term.name)
-            .toolbarSettingsButton()
+            .navigationBarTitleDisplayMode(.inline)
     }
 }
