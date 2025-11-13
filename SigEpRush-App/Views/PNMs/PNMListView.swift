@@ -15,11 +15,16 @@ enum PNMLayoutMode: String, CaseIterable, Identifiable {
 
 struct PNMListView: View {
     @EnvironmentObject var api: APIClient
+    @EnvironmentObject var auth: AuthStore
     @Environment(\.dismiss) private var dismiss
 
     let term: TermSummary
 
     @StateObject var vm: PNMListViewModel
+    
+    private var canAddPNMs: Bool {
+        auth.me?.role == "Admin" || auth.me?.role == "Adder"
+    }
 
     init(term: TermSummary, previewVM: PNMListViewModel? = nil) {
         self.term = term
@@ -142,27 +147,62 @@ struct PNMListView: View {
 
     private var content: some View {
         Group {
-            switch layoutMode {
-            case .list:
-                listView
-            case .grid:
-                gridView
+            if vm.items.isEmpty {
+                if canAddPNMs {
+                    EmptyStateView(
+                        title: "No PNMs Yet",
+                        message: "Add your first potential new member for this term.",
+                        systemImage: "person.crop.circle.badge.plus",
+                        actionTitle: "Add PNM",
+                        action: { showAdd = true }
+                    )
+                } else {
+                    EmptyStateView(
+                        title: "No PNMs Yet",
+                        message: "An officer will add PNMs to this term. Check back later.",
+                        systemImage: "person.3.sequence.fill"
+                    )
+                }
+            } else {
+                switch layoutMode {
+                case .list:
+                    listView
+                case .grid:
+                    gridView
+                }
             }
         }
     }
 
     private var listView: some View {
-        List {
-            ForEach(vm.items) { p in
-                NavigationLink {
-                    PNMDetailView(pnm: p)
-                } label: {
-                    PNMRowView(pnm: p)
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                ForEach(vm.items) { p in
+                    NavigationLink {
+                        PNMDetailView(pnm: p)
+                    } label: {
+                        HStack(spacing: 12) {
+                            PNMRowView(pnm: p)
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(SigEpTheme.purple)
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.systemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .shadow(color: Color.black.opacity(0.05), radius: 4, y: 1)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
                 }
             }
+            .padding(.top, 8)
+            .padding(.bottom, 16)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
     }
 
     private var gridView: some View {
@@ -180,17 +220,10 @@ struct PNMListView: View {
                         VStack(spacing: 8) {
                             avatarSquare(for: p)
 
-                            Text(p.preferredName ?? "\(p.firstName) \(p.lastName)")
+                            Text("\(p.firstName) \(p.lastName)")
                                 .font(.headline)
                                 .foregroundStyle(SigEpTheme.purple)
                                 .multilineTextAlignment(.center)
-
-                            if let major = p.major {
-                                Text(major)
-                                    .font(.caption)
-                                    .foregroundStyle(SigEpTheme.purple)
-                                    .multilineTextAlignment(.center)
-                            }
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -239,6 +272,7 @@ struct PNMListView: View {
                                 .fill(SigEpTheme.purple.opacity(0.1))
                             ProgressView()
                         }
+                        .frame(height: 120)
                     case .success(let image):
                         image
                             .resizable()
@@ -253,6 +287,7 @@ struct PNMListView: View {
                                 .font(.title.weight(.semibold))
                                 .foregroundStyle(SigEpTheme.purple)
                         }
+                        .frame(height: 120)
                     @unknown default:
                         ZStack {
                             RoundedRectangle(cornerRadius: 12)
@@ -261,6 +296,7 @@ struct PNMListView: View {
                                 .font(.title.weight(.semibold))
                                 .foregroundStyle(SigEpTheme.purple)
                         }
+                        .frame(height: 120)
                     }
                 }
             } else {
@@ -278,7 +314,7 @@ struct PNMListView: View {
     }
 }
 
-#Preview {
+#Preview("PNM List View") {
     let term = TermSummary(
         termId: "demo-term",
         name: "Fall 2025",
@@ -300,3 +336,4 @@ struct PNMListView: View {
             .environment(\.termId, term.termId)
     }
 }
+

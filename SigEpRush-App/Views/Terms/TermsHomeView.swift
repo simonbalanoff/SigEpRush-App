@@ -130,15 +130,17 @@ struct TermsHomeView: View {
                         } else if filteredTerms.isEmpty {
                             if terms.isEmpty {
                                 EmptyStateView(
-                                    title: "No Terms",
-                                    message: "Join a term to get started."
-                                ) {
-                                    showJoin = true
-                                }
+                                    title: "No Terms Yet",
+                                    message: "Join your chapter’s rush term to get started.",
+                                    systemImage: "rectangle.stack.badge.plus",
+                                    actionTitle: "Join Term",
+                                    action: { showJoin = true }
+                                )
                             } else {
                                 EmptyStateView(
                                     title: "No Matches",
-                                    message: "Try a different search."
+                                    message: "No terms match your search. Try a different name or code.",
+                                    systemImage: "magnifyingglass.circle"
                                 )
                             }
                         } else {
@@ -164,6 +166,7 @@ struct TermsHomeView: View {
             }
             .navigationDestination(item: $selected) { t in
                 TermWorkspaceView(term: t)
+                    .navigationBarBackButtonHidden(true)
             }
         }
         .tint(SigEpTheme.purple)
@@ -190,29 +193,41 @@ struct TermsHomeView: View {
     }
 
     var listView: some View {
-        List {
-            ForEach(filteredTerms) { t in
-                Button {
-                    selected = t
-                } label: {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(t.name)
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                            Text(t.code)
-                                .font(.subheadline)
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                ForEach(filteredTerms) { t in
+                    Button {
+                        selected = t
+                    } label: {
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(t.name)
+                                    .font(.headline)
+                                    .foregroundStyle(SigEpTheme.purple)
+                                Text(t.code)
+                                    .font(.subheadline)
+                                    .foregroundStyle(SigEpTheme.purple.opacity(0.8))
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.secondary)
                         }
-                        Spacer()
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.systemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .shadow(color: Color.black.opacity(0.05), radius: 4, y: 1)
                     }
-                    .padding(.vertical, 4)
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
                 }
-                .listRowBackground(Color(.systemBackground))
             }
+            .padding(.top, 4)
+            .padding(.bottom, 16)
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
     }
 
     var gridView: some View {
@@ -227,10 +242,10 @@ struct TermsHomeView: View {
                             Text(t.name)
                                 .font(.headline)
                                 .foregroundStyle(.primary)
-                                .multilineTextAlignment(.leading)
+                                .foregroundStyle(SigEpTheme.purple)
                             Text(t.code)
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(SigEpTheme.purple.opacity(0.8))
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
