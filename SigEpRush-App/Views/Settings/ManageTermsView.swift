@@ -9,6 +9,8 @@ import SwiftUI
 
 struct ManageTermsView: View {
     @EnvironmentObject var api: APIClient
+    @EnvironmentObject var ui: AppUIState
+
     @State private var items: [TermAdminItem] = []
     @State private var loading = true
     @State private var error: String?
@@ -29,8 +31,16 @@ struct ManageTermsView: View {
                             let old = t.isActive
                             t.isActive = newVal
                             Task {
-                                do { try await api.setTermActive(termId: t.id, active: newVal) }
-                                catch { t.isActive = old }
+                                do {
+                                    try await api.setTermActive(termId: t.id, active: newVal)
+                                    await MainActor.run {
+                                        ui.termsRefreshKey = UUID()
+                                    }
+                                } catch {
+                                    await MainActor.run {
+                                        t.isActive = old
+                                    }
+                                }
                             }
                         }
                     ))

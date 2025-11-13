@@ -41,6 +41,17 @@ final class APIClient: ObservableObject {
         auth.setTokens(access: o.token, refresh: "")
         auth.me = o.user
     }
+    
+    func loadMe() async {
+        do {
+            let (d, http) = try await request("auth/me", authorized: true)
+            guard http.statusCode == 200 else { throw URLError(.badServerResponse) }
+            let me = try JSONDecoder().decode(Me.self, from: d)
+            auth.me = me
+        } catch {
+            auth.clear()
+        }
+    }
 
     func myTerms() async throws -> [TermSummary] {
         let (d, http) = try await request("terms/mine")

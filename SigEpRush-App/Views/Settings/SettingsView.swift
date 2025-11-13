@@ -27,14 +27,19 @@ struct SettingsView: View {
                         Spacer()
                         Text(auth.me?.email ?? "-").foregroundStyle(.secondary)
                     }
-                    Button("Sign Out") { auth.clear() }.tint(.red)
+                    Button("Sign Out") {
+                        auth.clear()
+                        ui.showSettings = false
+                        dismiss()
+                    }.tint(.red)
                 }
                 Section("Terms") {
-                    Button {
-                        ui.showCreateTerm = true
+                    NavigationLink {
+                        CreateTermView()
                     } label: {
                         Label("Create Term", systemImage: "folder.badge.plus")
                     }
+                    .tint(.none)
                     NavigationLink {
                         ManageTermsView()
                     } label: {
@@ -44,7 +49,6 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .toolbar { ToolbarItem(placement: .topBarLeading) { Button("Close") { dismiss() } } }
-            .fullScreenCover(isPresented: $ui.showCreateTerm) { CreateTermModal() }
         }
     }
 }

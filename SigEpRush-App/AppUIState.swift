@@ -10,5 +10,5 @@ import Combine
 
 final class AppUIState: ObservableObject {
     @Published var showSettings = false
-    @Published var showCreateTerm = false
+    @Published var termsRefreshKey = UUID()
 }
