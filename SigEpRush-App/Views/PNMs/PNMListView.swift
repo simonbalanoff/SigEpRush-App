@@ -35,6 +35,19 @@ struct PNMListView: View {
     @State private var query = ""
     @State private var layoutMode: PNMLayoutMode = .list
 
+    private var filteredItems: [PNM] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { return vm.items }
+        let q = trimmed.lowercased()
+
+        return vm.items.filter { p in
+            let name = "\(p.firstName) \(p.lastName)".lowercased()
+            let preferred = p.preferredName?.lowercased() ?? ""
+            let major = p.major?.lowercased() ?? ""
+            return name.contains(q) || preferred.contains(q) || major.contains(q)
+        }
+    }
+
     var body: some View {
         ZStack {
             Color(.systemGroupedBackground)
@@ -49,9 +62,6 @@ struct PNMListView: View {
         }
         .task {
             await vm.load(api: api, termId: term.termId)
-        }
-        .onChange(of: query) {
-            Task { await vm.load(api: api, termId: term.termId) }
         }
         .fullScreenCover(isPresented: $showAdd) {
             AddPNMWizard { _ in
@@ -96,25 +106,27 @@ struct PNMListView: View {
 
             Spacer()
 
-            HStack(spacing: 8) {
+            HStack(spacing: 12) {
                 layoutIcon(mode: .list, systemName: "list.bullet")
                 layoutIcon(mode: .grid, systemName: "square.grid.2x2")
 
-                Button {
-                    showAdd = true
-                } label: {
-                    Image(systemName: "plus")
-                        .imageScale(.medium)
-                        .frame(width: 32, height: 32)
-                        .foregroundStyle(SigEpTheme.purple)
-                        .background(
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color(.systemBackground))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.black.opacity(0.06), lineWidth: 1)
-                        )
+                if canAddPNMs {
+                    Button {
+                        showAdd = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .imageScale(.medium)
+                            .frame(width: 32, height: 32)
+                            .foregroundStyle(SigEpTheme.purple)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color(.systemBackground))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                            )
+                    }
                 }
             }
         }
@@ -163,6 +175,12 @@ struct PNMListView: View {
                         systemImage: "person.3.sequence.fill"
                     )
                 }
+            } else if filteredItems.isEmpty {
+                EmptyStateView(
+                    title: "No Matches",
+                    message: "Try a different name or major.",
+                    systemImage: "person.fill.questionmark"
+                )
             } else {
                 switch layoutMode {
                 case .list:
@@ -177,7 +195,7 @@ struct PNMListView: View {
     private var listView: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
-                ForEach(vm.items) { p in
+                ForEach(filteredItems) { p in
                     NavigationLink {
                         PNMDetailView(pnm: p)
                     } label: {
@@ -213,7 +231,7 @@ struct PNMListView: View {
             ]
 
             LazyVGrid(columns: cols, spacing: 16) {
-                ForEach(vm.items) { p in
+                ForEach(filteredItems) { p in
                     NavigationLink {
                         PNMDetailView(pnm: p)
                     } label: {
@@ -325,6 +343,7 @@ struct PNMListView: View {
 
     let auth = AuthStore()
     auth.accessToken = "demo"
+    auth.me = Me(id: "", name: "", role: "Admin", email: "")
 
     let api = APIClient(auth: auth)
     let previewVM = PNMListViewModel.preview
@@ -336,4 +355,3 @@ struct PNMListView: View {
             .environment(\.termId, term.termId)
     }
 }
-

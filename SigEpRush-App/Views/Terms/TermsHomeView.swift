@@ -238,14 +238,21 @@ struct TermsHomeView: View {
                     Button {
                         selected = t
                     } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(t.name)
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                                .foregroundStyle(SigEpTheme.purple)
-                            Text(t.code)
-                                .font(.subheadline)
-                                .foregroundStyle(SigEpTheme.purple.opacity(0.8))
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(t.name)
+                                    .font(.headline)
+                                    .foregroundStyle(.primary)
+                                    .foregroundStyle(SigEpTheme.purple)
+                                Text(t.code)
+                                    .font(.subheadline)
+                                    .foregroundStyle(SigEpTheme.purple.opacity(0.8))
+                            }
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
