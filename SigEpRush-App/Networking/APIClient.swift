@@ -87,11 +87,14 @@ final class APIClient: ObservableObject {
 
     func pnms(termId: String, q: String = "") async throws -> [PNM] {
         var path = "terms/\(termId)/pnms"
-        if !q.isEmpty { path += "?q=\(q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" }
+        if !q.isEmpty {
+            path += "?q=\(q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        }
         let (d, http) = try await request(path)
         guard http.statusCode == 200 else { throw URLError(.badServerResponse) }
         struct Resp: Codable { let items: [PNM] }
-        return try JSONDecoder().decode(Resp.self, from: d).items
+        let resp = try JSONDecoder().decode(Resp.self, from: d)
+        return resp.items
     }
 
     func createPNM(termId: String, payload: PNMCreate) async throws -> PNM {

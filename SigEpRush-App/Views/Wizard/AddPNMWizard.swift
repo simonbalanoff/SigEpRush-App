@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AddPNMWizard: View {
     @EnvironmentObject var api: APIClient
+    @Environment(\.dismiss) var dismiss
     @Environment(\.termId) var termId
 
     @Binding var isPresented: Bool
@@ -87,11 +88,8 @@ struct AddPNMWizard: View {
                             .disabled(vm.step == 0 && !vm.canNextFromInfo || (vm.step == 1 && vm.image == nil))
                         } else {
                             Button(action: {
-                                Task { @MainActor in
-                                    if let created = await vm.submit(termId: termId, api: api) {
-                                        onCreate(created)
-                                        isPresented = false
-                                    }
+                                Task {
+                                    await handleAdd()
                                 }
                             }) {
                                 HStack {
@@ -410,6 +408,15 @@ struct AddPNMWizard: View {
                 .foregroundStyle(SigEpTheme.purple)
         }
         .font(.body)
+    }
+    
+    @MainActor
+    private func handleAdd() async {
+        isPresented = false
+        guard !vm.saving else { return }
+        if let created = await vm.submit(termId: termId, api: api) {
+            onCreate(created)
+        }
     }
 }
 

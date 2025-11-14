@@ -16,31 +16,41 @@ final class PNMDetailViewModel: ObservableObject {
     @Published var sending = false
 
     func load(api: APIClient, pnmId: String) async {
-        do { ratings = try await api.ratings(pnmId: pnmId) } catch {}
+        do {
+            ratings = try await api.ratings(pnmId: pnmId)
+        } catch {}
     }
 
     func submit(api: APIClient, pnmId: String) async {
         sending = true
         defer { sending = false }
         do {
-            try await api.upsertRating(pnmId: pnmId, score: myScore, comment: myComment.isEmpty ? nil : myComment)
-            try await Task.sleep(nanoseconds: 150_000_000)
+            try await api.upsertRating(
+                pnmId: pnmId,
+                score: myScore,
+                comment: myComment.isEmpty ? nil : myComment
+            )
             ratings = try await api.ratings(pnmId: pnmId)
         } catch {}
     }
 
     func toggleReaction(api: APIClient, rating: RatingItem, emoji: String) async {
+        guard let index = ratings.firstIndex(where: { $0.id == rating.id }) else { return }
+
+        var updatedRating = ratings[index]
+        let alreadyReacted = updatedRating.myReactions.contains(emoji)
+
         do {
-            let mine = Set(rating.myReactions)
-            let updated = try await (mine.contains(emoji) ? api.unreact(ratingId: rating.id, emoji: emoji) : api.react(ratingId: rating.id, emoji: emoji))
-            if let i = ratings.firstIndex(where: { $0.id == rating.id }) {
-                var r = ratings[i]
-                var mr = Set(r.myReactions)
-                if mr.contains(emoji) { mr.remove(emoji) } else { mr.insert(emoji) }
-                r.myReactions = Array(mr)
-                r.reactions = updated
-                ratings[i] = r
+            let newReactions: [String:Int]
+            if alreadyReacted {
+                newReactions = try await api.unreact(ratingId: updatedRating.id, emoji: emoji)
+                updatedRating.myReactions.removeAll(where: { $0 == emoji })
+            } else {
+                newReactions = try await api.react(ratingId: updatedRating.id, emoji: emoji)
+                updatedRating.myReactions.append(emoji)
             }
+            updatedRating.reactions = newReactions
+            ratings[index] = updatedRating
         } catch {}
     }
 }

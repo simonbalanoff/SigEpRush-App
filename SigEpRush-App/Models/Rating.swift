@@ -7,6 +7,8 @@
 
 import Foundation
 
+import Foundation
+
 struct RatingItem: Codable, Identifiable, Hashable {
     let id: String
     var score: Int
@@ -15,6 +17,7 @@ struct RatingItem: Codable, Identifiable, Hashable {
     var updatedAt: String
     var reactions: [String:Int]
     var myReactions: [String]
+
     struct Rater: Codable, Hashable {
         let id: String
         let name: String
@@ -22,6 +25,15 @@ struct RatingItem: Codable, Identifiable, Hashable {
     }
 }
 
-struct RateUpsertReq: Encodable { let score: Int; let comment: String? }
-struct ReactReq: Encodable { let emoji: String }
-struct ReactionsResp: Codable { let reactions: [String:Int] }
+struct RateUpsertReq: Encodable {
+    let score: Int
+    let comment: String?
+}
+
+struct ReactReq: Encodable {
+    let emoji: String
+}
+
+struct ReactionsResp: Codable {
+    let reactions: [String:Int]
+}

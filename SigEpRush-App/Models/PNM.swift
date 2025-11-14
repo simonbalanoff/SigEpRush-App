@@ -16,7 +16,7 @@ struct Aggregate: Codable, Hashable {
 
 struct PNM: Codable, Identifiable, Hashable {
     let id: String
-    var termId: String
+    let termId: String
     var firstName: String
     var lastName: String
     var preferredName: String?
@@ -25,8 +25,23 @@ struct PNM: Codable, Identifiable, Hashable {
     var gpa: Double?
     var phone: String?
     var photoURL: String?
-    var status: String
+    var status: String?
     var aggregate: Aggregate?
+
+    enum CodingKeys: String, CodingKey {
+        case id = "_id"
+        case termId
+        case firstName
+        case lastName
+        case preferredName
+        case classYear
+        case major
+        case gpa
+        case phone
+        case photoURL
+        case status
+        case aggregate
+    }
 }
 
 struct PNMCreate: Encodable {
