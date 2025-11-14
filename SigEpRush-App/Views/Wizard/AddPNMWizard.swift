@@ -40,47 +40,69 @@ struct AddPNMWizard: View {
                     }
 
                     HStack {
-                        
-                        Button(vm.step == 0 ? "Cancel" : "Back") {
+                        Button(action: {
                             if vm.step == 0 {
                                 dismiss()
                             } else {
                                 vm.step -= 1
                             }
+                        }) {
+                            HStack {
+                                Spacer()
+                                Text(vm.step == 0 ? "Cancel" : "Back")
+                                    .fontWeight(.semibold)
+                                Spacer()
+                            }
+                            .frame(height: 44)
+                            .contentShape(Rectangle())
                         }
-                        .frame(height: 44)
                         .frame(maxWidth: 160)
-                        .background(vm.step == 0 && !vm.canNextFromInfo ? SigEpTheme.purple.opacity(0.3) : SigEpTheme.purple)
+                        .background(SigEpTheme.purple)
                         .foregroundStyle(Color.white)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .disabled(vm.step == 0 && !vm.canNextFromInfo)
 
                         Spacer()
 
                         if vm.step < 2 {
-                            Button("Next") {
+                            Button(action: {
                                 if vm.step == 0 && vm.canNextFromInfo {
                                     vm.step += 1
-                                } else if vm.step == 1 {
+                                } else if vm.step == 1 && vm.image != nil {
                                     vm.step += 1
                                 }
+                            }) {
+                                HStack {
+                                    Spacer()
+                                    Text("Next")
+                                        .fontWeight(.semibold)
+                                    Spacer()
+                                }
+                                .frame(height: 44)
+                                .contentShape(Rectangle())
                             }
-                            .frame(height: 44)
                             .frame(maxWidth: 160)
-                            .background(vm.step == 0 && !vm.canNextFromInfo ? SigEpTheme.purple.opacity(0.3) : SigEpTheme.purple)
+                            .background((vm.step == 0 && !vm.canNextFromInfo) || (vm.step == 1 && vm.image == nil) ? SigEpTheme.purple.opacity(0.3) : SigEpTheme.purple)
                             .foregroundStyle(Color.white)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                             .disabled(vm.step == 0 && !vm.canNextFromInfo)
+                            .disabled(vm.step == 1 && vm.image == nil)
                         } else {
-                            Button(vm.saving ? "Adding…" : "Add PNM") {
-                                Task {
+                            Button(action: {
+                                Task { @MainActor in
                                     if let created = await vm.submit(termId: termId, api: api) {
                                         onCreate(created)
-                                        dismiss()
                                     }
                                 }
+                            }) {
+                                HStack {
+                                    Spacer()
+                                    Text(vm.saving ? "Adding…" : "Add PNM")
+                                        .fontWeight(.semibold)
+                                    Spacer()
+                                }
+                                .frame(height: 44)
+                                .contentShape(Rectangle())
                             }
-                            .frame(height: 44)
                             .frame(maxWidth: 180)
                             .background(vm.saving || !vm.canNextFromInfo ? SigEpTheme.purple.opacity(0.3) : SigEpTheme.purple)
                             .foregroundStyle(Color.white)
@@ -89,7 +111,7 @@ struct AddPNMWizard: View {
                         }
                     }
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 12)
+                    .padding(.bottom, 26)
                 }
             }
             .navigationTitle("New PNM")
@@ -389,4 +411,16 @@ struct AddPNMWizard: View {
         }
         .font(.body)
     }
+}
+
+#Preview("Add PNM Wizard") {
+    let auth = AuthStore()
+    auth.accessToken = "demo"
+
+    let api = APIClient(auth: auth)
+
+    return AddPNMWizard(onCreate: { _ in })
+        .environmentObject(api)
+        .environmentObject(auth)
+        .environment(\.termId, "demo-term")
 }
