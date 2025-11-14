@@ -200,6 +200,7 @@ struct PNMListView: View {
                 ForEach(filteredItems) { p in
                     NavigationLink {
                         PNMDetailView(pnm: p)
+                            .navigationBarBackButtonHidden(true)
                     } label: {
                         HStack(spacing: 12) {
                             PNMRowView(pnm: p)

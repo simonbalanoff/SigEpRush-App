@@ -9,6 +9,7 @@ import SwiftUI
 
 struct PNMDetailView: View {
     @EnvironmentObject var api: APIClient
+    @Environment(\.dismiss) private var dismiss
     let pnm: PNM
 
     @StateObject var vm = PNMDetailViewModel()
@@ -40,26 +41,6 @@ struct PNMDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showRate = true
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "star.bubble.fill")
-                            .imageScale(.medium)
-                        Text("Rate")
-                            .font(.subheadline.weight(.semibold))
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(SigEpTheme.purple.opacity(0.12))
-                    .foregroundStyle(SigEpTheme.purple)
-                    .clipShape(Capsule())
-                }
-            }
-        }
-        .toolbarSettingsButton()
         .task {
             await vm.load(api: api, pnmId: pnm.id)
         }
@@ -77,69 +58,60 @@ struct PNMDetailView: View {
 
     private var header: some View {
         HStack(spacing: 10) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(SigEpTheme.purple.opacity(0.08))
-
-                if let urlStr = pnm.photoURL, let url = URL(string: urlStr) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let img):
-                            img
-                                .resizable()
-                                .scaledToFill()
-                        case .empty:
-                            ProgressView()
-                        default:
-                            initialsFallback
-                        }
-                    }
-                } else {
-                    initialsFallback
-                }
+            
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.backward")
+                    .imageScale(.medium)
+                    .frame(width: 32, height: 32)
+                    .foregroundStyle(SigEpTheme.purple)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color(.systemBackground))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                    )
             }
-            .frame(width: 64, height: 64)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(displayName)
+            
+            Image("SigEpCrest")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 42, height: 42)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(pnm.preferredName ?? pnm.firstName) \(pnm.lastName)")
                     .font(.headline.weight(.semibold))
                 if let major = pnm.major {
                     Text(major)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
-                if let year = pnm.classYear {
-                    Text("Class of \(year)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
             }
-
+            
             Spacer()
+            
+            Button {
+                showRate = true
+            } label: {
+                Image(systemName: "square.and.pencil")
+                    .imageScale(.medium)
+                    .frame(width: 32, height: 32)
+                    .foregroundStyle(SigEpTheme.purple)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color(.systemBackground))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                    )
+            }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-    }
-
-    private var initialsFallback: some View {
-        let initials =
-            String((pnm.preferredName ?? pnm.firstName).prefix(1)) +
-            String(pnm.lastName.prefix(1))
-
-        return ZStack {
-            LinearGradient(
-                colors: [
-                    SigEpTheme.purple.opacity(0.6),
-                    SigEpTheme.purple.opacity(0.3)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            Text(initials.uppercased())
-                .font(.title2.weight(.bold))
-                .foregroundStyle(.white)
-        }
+        .padding(.horizontal)
+        .padding(.top, 4)
     }
 
     private var summaryCard: some View {
