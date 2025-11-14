@@ -9,9 +9,9 @@ import SwiftUI
 
 struct AddPNMWizard: View {
     @EnvironmentObject var api: APIClient
-    @Environment(\.dismiss) var dismiss
     @Environment(\.termId) var termId
 
+    @Binding var isPresented: Bool
     var onCreate: (PNM) -> Void
 
     @StateObject var vm = PNMWizardViewModel()
@@ -42,7 +42,7 @@ struct AddPNMWizard: View {
                     HStack {
                         Button(action: {
                             if vm.step == 0 {
-                                dismiss()
+                                isPresented = false
                             } else {
                                 vm.step -= 1
                             }
@@ -84,13 +84,13 @@ struct AddPNMWizard: View {
                             .background((vm.step == 0 && !vm.canNextFromInfo) || (vm.step == 1 && vm.image == nil) ? SigEpTheme.purple.opacity(0.3) : SigEpTheme.purple)
                             .foregroundStyle(Color.white)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .disabled(vm.step == 0 && !vm.canNextFromInfo)
-                            .disabled(vm.step == 1 && vm.image == nil)
+                            .disabled(vm.step == 0 && !vm.canNextFromInfo || (vm.step == 1 && vm.image == nil))
                         } else {
                             Button(action: {
                                 Task { @MainActor in
                                     if let created = await vm.submit(termId: termId, api: api) {
                                         onCreate(created)
+                                        isPresented = false
                                     }
                                 }
                             }) {
@@ -414,12 +414,13 @@ struct AddPNMWizard: View {
 }
 
 #Preview("Add PNM Wizard") {
+    @Previewable @State var isShown = true
     let auth = AuthStore()
     auth.accessToken = "demo"
-
+    
     let api = APIClient(auth: auth)
-
-    return AddPNMWizard(onCreate: { _ in })
+    
+    return AddPNMWizard(isPresented: .constant(true), onCreate: { _ in })
         .environmentObject(api)
         .environmentObject(auth)
         .environment(\.termId, "demo-term")

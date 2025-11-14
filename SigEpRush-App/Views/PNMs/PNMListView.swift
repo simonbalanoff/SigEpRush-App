@@ -64,8 +64,10 @@ struct PNMListView: View {
             await vm.load(api: api, termId: term.termId)
         }
         .fullScreenCover(isPresented: $showAdd) {
-            AddPNMWizard { _ in
-                Task { await vm.load(api: api, termId: term.termId) }
+            AddPNMWizard(isPresented: $showAdd) { _ in
+                Task { @MainActor in
+                    await vm.load(api: api, termId: term.termId)
+                }
             }
             .environmentObject(api)
             .environment(\.termId, term.termId)
