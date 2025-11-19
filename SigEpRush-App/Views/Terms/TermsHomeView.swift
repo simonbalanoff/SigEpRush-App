@@ -211,9 +211,23 @@ struct TermsHomeView: View {
 
                             Spacer()
 
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.secondary)
+                            HStack(spacing: 8) {
+                                if !t.active {
+                                    Text("Inactive")
+                                        .font(.caption2.weight(.semibold))
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(
+                                            Capsule()
+                                                .fill(Color.red.opacity(0.12))
+                                        )
+                                        .foregroundStyle(.red)
+                                }
+
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                         .padding()
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -242,12 +256,25 @@ struct TermsHomeView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(t.name)
                                     .font(.headline)
-                                    .foregroundStyle(.primary)
                                     .foregroundStyle(SigEpTheme.purple)
-                                Text(t.code)
-                                    .font(.subheadline)
-                                    .foregroundStyle(SigEpTheme.purple.opacity(0.8))
+                                HStack {
+                                    Text(t.code)
+                                        .font(.subheadline)
+                                        .foregroundStyle(SigEpTheme.purple.opacity(0.8))
+                                    if !t.active {
+                                        Text("Inactive")
+                                            .font(.caption2.weight(.semibold))
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(
+                                                Capsule()
+                                                    .fill(Color.red.opacity(0.12))
+                                            )
+                                            .foregroundStyle(.red)
+                                    }
+                                }
                             }
+
                             Spacer()
 
                             Image(systemName: "chevron.right")
@@ -272,7 +299,10 @@ struct TermsHomeView: View {
         defer { loading = false }
         do {
             let all = try await api.myTerms()
-            terms = all.filter { $0.active }
+            terms = all.sorted { lhs, rhs in
+                if lhs.active == rhs.active { return lhs.name < rhs.name }
+                return lhs.active && !rhs.active
+            }
         } catch {}
     }
 }

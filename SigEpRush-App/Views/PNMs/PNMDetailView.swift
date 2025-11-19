@@ -31,11 +31,15 @@ struct PNMDetailView: View {
 
                 ScrollView {
                     VStack(spacing: 16) {
+                        heroImage
+                            .padding(.horizontal, 16)
+
                         summaryCard
+                            .padding(.horizontal, 16)
 
                         ratingsSection
+                            .padding(.horizontal, 16)
                     }
-                    .padding(.horizontal, 16)
                     .padding(.bottom, 24)
                 }
             }
@@ -58,7 +62,6 @@ struct PNMDetailView: View {
 
     private var header: some View {
         HStack(spacing: 10) {
-            
             Button {
                 dismiss()
             } label: {
@@ -75,14 +78,14 @@ struct PNMDetailView: View {
                             .stroke(Color.black.opacity(0.06), lineWidth: 1)
                     )
             }
-            
+
             Image("SigEpCrest")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 42, height: 42)
-            
+
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(pnm.preferredName ?? pnm.firstName) \(pnm.lastName)")
+                Text(displayName)
                     .font(.headline.weight(.semibold))
                 if let major = pnm.major {
                     Text(major)
@@ -90,9 +93,9 @@ struct PNMDetailView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            
+
             Spacer()
-            
+
             Button {
                 showRate = true
             } label: {
@@ -114,8 +117,62 @@ struct PNMDetailView: View {
         .padding(.top, 4)
     }
 
+    private var heroImage: some View {
+        let initials = String((pnm.preferredName ?? pnm.firstName).prefix(1)) +
+                       String(pnm.lastName.prefix(1))
+
+        return Group {
+            if let urlString = pnm.photoURL, let url = URL(string: urlString) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 18)
+                                .fill(SigEpTheme.purple.opacity(0.08))
+                            ProgressView()
+                        }
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .clipShape(RoundedRectangle(cornerRadius: 18))
+                    case .failure:
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 18)
+                                .fill(SigEpTheme.purple.opacity(0.08))
+                            Text(initials)
+                                .font(.largeTitle.weight(.semibold))
+                                .foregroundStyle(SigEpTheme.purple)
+                        }
+                    @unknown default:
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 18)
+                                .fill(SigEpTheme.purple.opacity(0.08))
+                            Text(initials)
+                                .font(.largeTitle.weight(.semibold))
+                                .foregroundStyle(SigEpTheme.purple)
+                        }
+                    }
+                }
+                .aspectRatio(1, contentMode: .fill)
+                .clipped()
+                .shadow(color: Color.black.opacity(0.06), radius: 6, y: 3)
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(SigEpTheme.purple.opacity(0.08))
+                    Text(initials)
+                        .font(.largeTitle.weight(.semibold))
+                        .foregroundStyle(SigEpTheme.purple)
+                }
+                .aspectRatio(1, contentMode: .fit)
+                .shadow(color: Color.black.opacity(0.06), radius: 6, y: 3)
+            }
+        }
+    }
+
     private var summaryCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text("Overview")
                     .font(.subheadline.weight(.semibold))
@@ -139,45 +196,53 @@ struct PNMDetailView: View {
                 }
             }
 
-            if let status = pnm.status {
+            VStack(spacing: 10) {
                 HStack {
-                    Text("Status")
+                    Text("Name")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text(status.capitalized)
+                    Text(displayName)
                         .font(.subheadline.weight(.medium))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(Color(.secondarySystemBackground))
-                        .clipShape(Capsule())
                 }
-            }
 
-            if let gpa = pnm.gpa {
-                HStack {
-                    Text("GPA")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(String(format: "%.2f", gpa))
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(SigEpTheme.purple)
+                if let gpa = pnm.gpa {
+                    HStack {
+                        Text("GPA")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text(String(format: "%.2f", gpa))
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(SigEpTheme.purple)
+                    }
                 }
-            }
 
-            if let phone = pnm.phone, !phone.isEmpty {
-                HStack {
-                    Text("Phone")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(phone)
-                        .font(.subheadline.weight(.medium))
+                if let phone = pnm.phone, !phone.isEmpty {
+                    HStack {
+                        Text("Phone")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text(phone)
+                            .font(.subheadline.weight(.medium))
+                    }
+                }
+
+                if let major = pnm.major {
+                    HStack {
+                        Text("Major")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text(major)
+                            .font(.subheadline.weight(.medium))
+                            .multilineTextAlignment(.trailing)
+                    }
                 }
             }
         }
-        .padding(14)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))

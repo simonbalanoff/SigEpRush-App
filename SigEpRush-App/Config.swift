@@ -8,5 +8,5 @@
 import Foundation
 
 enum AppEnv {
-    static var baseURL: URL = URL(string: "http://localhost:3000")!
+    static var baseURL: URL = URL(string: "https://sigeprush-api.onrender.com/")!
 }

@@ -166,26 +166,6 @@ struct SettingsView: View {
                     .padding(.vertical, 8)
                 }
                 .buttonStyle(.plain)
-
-                Divider()
-
-                NavigationLink {
-                    ManageTermsView()
-                } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: "folder.badge.gear")
-                            .imageScale(.medium)
-                            .foregroundStyle(SigEpTheme.purple)
-                        Text("Manage Terms")
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, 8)
-                }
-                .buttonStyle(.plain)
             }
             .padding(12)
             .background(Color(.systemBackground))

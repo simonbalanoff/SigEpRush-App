@@ -16,6 +16,7 @@ enum PNMLayoutMode: String, CaseIterable, Identifiable {
 struct PNMListView: View {
     @EnvironmentObject var api: APIClient
     @EnvironmentObject var auth: AuthStore
+    @EnvironmentObject var ui: AppUIState
     @Environment(\.dismiss) private var dismiss
 
     let term: TermSummary
@@ -23,6 +24,10 @@ struct PNMListView: View {
     @StateObject var vm: PNMListViewModel
     
     private var canAddPNMs: Bool {
+        auth.me?.role == "Admin" || auth.me?.role == "Adder"
+    }
+
+    private var canManageTerm: Bool {
         auth.me?.role == "Admin" || auth.me?.role == "Adder"
     }
 
@@ -34,6 +39,10 @@ struct PNMListView: View {
     @State private var showAdd = false
     @State private var query = ""
     @State private var layoutMode: PNMLayoutMode = .list
+
+    @State private var adminTerm: TermAdminItem?
+    @State private var showAdmin = false
+    @State private var adminError: String?
 
     private var filteredItems: [PNM] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -55,6 +64,12 @@ struct PNMListView: View {
 
             VStack(spacing: 12) {
                 header
+                if let err = adminError {
+                    Text(err)
+                        .foregroundStyle(.red)
+                        .font(.footnote)
+                        .padding(.horizontal)
+                }
                 searchBar
                 content
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -71,6 +86,13 @@ struct PNMListView: View {
             }
             .environmentObject(api)
             .environment(\.termId, term.termId)
+        }
+        .fullScreenCover(item: $adminTerm) { adminTerm in
+            NavigationStack {
+                TermAdminDetailView(term: adminTerm)
+                    .environmentObject(api)
+                    .environmentObject(ui)
+            }
         }
     }
 
@@ -117,6 +139,25 @@ struct PNMListView: View {
                         showAdd = true
                     } label: {
                         Image(systemName: "plus")
+                            .imageScale(.medium)
+                            .frame(width: 32, height: 32)
+                            .foregroundStyle(SigEpTheme.purple)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color(.systemBackground))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                            )
+                    }
+                }
+
+                if canManageTerm {
+                    Button {
+                        Task { await openAdminTerm() }
+                    } label: {
+                        Image(systemName: "gearshape.fill")
                             .imageScale(.medium)
                             .frame(width: 32, height: 32)
                             .foregroundStyle(SigEpTheme.purple)
@@ -333,7 +374,28 @@ struct PNMListView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
+
+    private func openAdminTerm() async {
+        adminError = nil
+        do {
+            let items = try await api.adminTerms()
+            if let match = items.first(where: { $0.id == term.termId }) {
+                await MainActor.run {
+                    adminTerm = match
+                }
+            } else {
+                await MainActor.run {
+                    adminError = "You are not an admin for this term."
+                }
+            }
+        } catch {
+            await MainActor.run {
+                adminError = "Failed to load term settings."
+            }
+        }
+    }
 }
+
 
 #Preview("PNM List View") {
     let term = TermSummary(

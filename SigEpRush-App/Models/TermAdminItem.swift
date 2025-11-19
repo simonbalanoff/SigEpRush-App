@@ -11,5 +11,6 @@ struct TermAdminItem: Codable, Identifiable, Hashable {
     let id: String
     let name: String
     let code: String
+    let inviteCode: String?
     var isActive: Bool
 }
