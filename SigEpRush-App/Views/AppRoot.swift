@@ -13,6 +13,8 @@ struct AppRoot: View {
     @EnvironmentObject var api: APIClient
 
     @State private var checked = false
+    @State private var navigateToLastTerm = false
+    @State private var lastTerm: TermSummary?
 
     var body: some View {
         Group {
@@ -22,13 +24,41 @@ struct AppRoot: View {
                 LoadingOverlay()
                     .task {
                         await api.loadMe()
+                        await loadLastViewedTerm()
                         checked = true
                     }
             } else {
-                TermsHomeView()
+                NavigationStack {
+                    TermsHomeView()
+                        .navigationDestination(isPresented: $navigateToLastTerm) {
+                            if let term = lastTerm {
+                                TermWorkspaceView(term: term)
+                                    .navigationBarBackButtonHidden(true)
+                            }
+                        }
+                }
             }
         }
         .fullScreenCover(isPresented: $ui.showSettings) { SettingsView() }
+    }
+    
+    private func loadLastViewedTerm() async {
+        guard let termId = ui.lastViewedTermId else { return }
+        
+        do {
+            let terms = try await api.myTerms()
+            if let term = terms.first(where: { $0.termId == termId }) {
+                await MainActor.run {
+                    lastTerm = term
+                    navigateToLastTerm = true
+                }
+            } else {
+                // Term no longer exists or user no longer has access
+                ui.clearLastViewedTerm()
+            }
+        } catch {
+            // Failed to load terms, just show home
+        }
     }
 }
 
@@ -44,5 +74,5 @@ struct AppRoot: View {
         .environmentObject(api)
         .environmentObject(ui)
 
-    return NavigationStack { view }
+    return view
 }

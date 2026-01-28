@@ -32,7 +32,6 @@ struct PNMDetailView: View {
                 ScrollView {
                     VStack(spacing: 16) {
                         heroImage
-                            .padding(.horizontal, 16)
 
                         summaryCard
                             .padding(.horizontal, 16)
@@ -123,52 +122,33 @@ struct PNMDetailView: View {
 
         return Group {
             if let urlString = pnm.photoURL, let url = URL(string: urlString) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 18)
-                                .fill(SigEpTheme.purple.opacity(0.08))
-                            ProgressView()
-                        }
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .clipShape(RoundedRectangle(cornerRadius: 18))
-                    case .failure:
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 18)
-                                .fill(SigEpTheme.purple.opacity(0.08))
-                            Text(initials)
-                                .font(.largeTitle.weight(.semibold))
-                                .foregroundStyle(SigEpTheme.purple)
-                        }
-                    @unknown default:
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 18)
-                                .fill(SigEpTheme.purple.opacity(0.08))
-                            Text(initials)
-                                .font(.largeTitle.weight(.semibold))
-                                .foregroundStyle(SigEpTheme.purple)
-                        }
-                    }
+                CachedAsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 280, height: 280)
+                        .clipped()
+                } placeholder: {
+                    heroPlaceholder(initials: initials)
                 }
-                .aspectRatio(1, contentMode: .fill)
-                .clipped()
-                .shadow(color: Color.black.opacity(0.06), radius: 6, y: 3)
             } else {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 18)
-                        .fill(SigEpTheme.purple.opacity(0.08))
-                    Text(initials)
-                        .font(.largeTitle.weight(.semibold))
-                        .foregroundStyle(SigEpTheme.purple)
-                }
-                .aspectRatio(1, contentMode: .fit)
-                .shadow(color: Color.black.opacity(0.06), radius: 6, y: 3)
+                heroPlaceholder(initials: initials)
             }
         }
+        .frame(width: 280, height: 280)
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .shadow(color: Color.black.opacity(0.06), radius: 6, y: 3)
+    }
+    
+    private func heroPlaceholder(initials: String) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 18)
+                .fill(SigEpTheme.purple.opacity(0.08))
+            Text(initials)
+                .font(.largeTitle.weight(.semibold))
+                .foregroundStyle(SigEpTheme.purple)
+        }
+        .frame(width: 280, height: 280)
     }
 
     private var summaryCard: some View {

@@ -87,12 +87,13 @@ struct PNMListView: View {
             .environmentObject(api)
             .environment(\.termId, term.termId)
         }
-        .fullScreenCover(item: $adminTerm) { adminTerm in
-            NavigationStack {
-                TermAdminDetailView(term: adminTerm)
-                    .environmentObject(api)
-                    .environmentObject(ui)
+        .sheet(item: $adminTerm) { adminTerm in
+            TermEditSheet(term: adminTerm) {
+                Task {
+                    ui.termsRefreshKey = UUID()
+                }
             }
+            .environmentObject(api)
         }
     }
 
@@ -326,53 +327,32 @@ struct PNMListView: View {
 
         return Group {
             if let urlString = p.photoURL, let url = URL(string: urlString) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(SigEpTheme.purple.opacity(0.1))
-                            ProgressView()
-                        }
-                        .frame(height: 120)
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(height: 120)
-                            .clipped()
-                    case .failure:
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(SigEpTheme.purple.opacity(0.1))
-                            Text(fallbackInitials)
-                                .font(.title.weight(.semibold))
-                                .foregroundStyle(SigEpTheme.purple)
-                        }
-                        .frame(height: 120)
-                    @unknown default:
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(SigEpTheme.purple.opacity(0.1))
-                            Text(fallbackInitials)
-                                .font(.title.weight(.semibold))
-                                .foregroundStyle(SigEpTheme.purple)
-                        }
-                        .frame(height: 120)
-                    }
+                CachedAsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 140, height: 140)
+                        .clipped()
+                } placeholder: {
+                    placeholderSquare(initials: fallbackInitials)
                 }
             } else {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(SigEpTheme.purple.opacity(0.1))
-                    Text(fallbackInitials)
-                        .font(.title.weight(.semibold))
-                        .foregroundStyle(SigEpTheme.purple)
-                }
-                .frame(height: 120)
+                placeholderSquare(initials: fallbackInitials)
             }
         }
+        .frame(width: 140, height: 140)
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+    
+    private func placeholderSquare(initials: String) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(SigEpTheme.purple.opacity(0.1))
+            Text(initials)
+                .font(.title.weight(.semibold))
+                .foregroundStyle(SigEpTheme.purple)
+        }
+        .frame(width: 140, height: 140)
     }
 
     private func openAdminTerm() async {

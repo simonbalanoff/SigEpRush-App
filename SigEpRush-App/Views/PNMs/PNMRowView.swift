@@ -39,17 +39,14 @@ struct PNMRowView: View {
     private var avatar: some View {
         Group {
             if let u = pnm.photoURL, let url = URL(string: u) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
-                        placeholder
-                    case .success(let img):
-                        img.resizable().scaledToFill()
-                    case .failure:
-                        placeholder
-                    @unknown default:
-                        placeholder
-                    }
+                CachedAsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 52, height: 52)
+                        .clipped()
+                } placeholder: {
+                    placeholder
                 }
             } else {
                 placeholder
@@ -68,5 +65,6 @@ struct PNMRowView: View {
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(SigEpTheme.purple)
         }
+        .frame(width: 52, height: 52)
     }
 }

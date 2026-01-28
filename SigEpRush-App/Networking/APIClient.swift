@@ -42,6 +42,22 @@ final class APIClient: ObservableObject {
         auth.me = o.user
     }
     
+    func register(email: String, password: String, name: String, invitationCode: String) async throws {
+        let (d, http) = try await request("auth/register", method: "POST", body: RegisterReq(email: email, password: password, name: name, invitationCode: invitationCode), authorized: false)
+        guard http.statusCode == 200 else {
+            if http.statusCode == 409 {
+                throw NSError(domain: "", code: 409, userInfo: [NSLocalizedDescriptionKey: "An account with this email already exists"])
+            }
+            if http.statusCode == 403 {
+                throw NSError(domain: "", code: 403, userInfo: [NSLocalizedDescriptionKey: "Invalid invitation code"])
+            }
+            throw URLError(.badServerResponse)
+        }
+        let o = try JSONDecoder().decode(LoginResp.self, from: d)
+        auth.setTokens(access: o.token, refresh: "")
+        auth.me = o.user
+    }
+    
     func loadMe() async {
         do {
             let (d, http) = try await request("auth/me", authorized: true)
@@ -144,6 +160,43 @@ final class APIClient: ObservableObject {
         let (d, http) = try await request("ratings/\(ratingId)/reactions", method: "DELETE", body: ReactReq(emoji: emoji))
         guard http.statusCode == 200 else { throw URLError(.badServerResponse) }
         return try JSONDecoder().decode(ReactionsResp.self, from: d).reactions
+    }
+    
+    func listUsers(query: String = "") async throws -> [UserListItem] {
+        var path = "users"
+        if !query.isEmpty {
+            path += "?q=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        }
+        let (d, http) = try await request(path)
+        guard http.statusCode == 200 else { throw URLError(.badServerResponse) }
+        struct Resp: Codable { let items: [UserListItem] }
+        return try JSONDecoder().decode(Resp.self, from: d).items
+    }
+    
+    func updateUserRole(userId: String, role: String) async throws {
+        let (_, http) = try await request("users/\(userId)/role", method: "PATCH", body: UpdateUserRoleReq(role: role))
+        guard http.statusCode == 200 else { throw URLError(.badServerResponse) }
+    }
+    
+    func updateTerm(termId: String, name: String?, isActive: Bool?) async throws {
+        struct UpdateTermBody: Codable {
+            let name: String?
+            let isActive: Bool?
+        }
+        let body = UpdateTermBody(name: name, isActive: isActive)
+        let (_, http) = try await request("terms/\(termId)", method: "PATCH", body: body)
+        guard http.statusCode == 200 else { throw URLError(.badServerResponse) }
+    }
+    
+    func deleteAccount() async throws {
+        let (d, http) = try await request("users/me", method: "DELETE")
+        guard http.statusCode == 200 else {
+            if let errorMsg = try? JSONDecoder().decode([String: String].self, from: d),
+               let message = errorMsg["error"] {
+                throw NSError(domain: "", code: http.statusCode, userInfo: [NSLocalizedDescriptionKey: message])
+            }
+            throw URLError(.badServerResponse)
+        }
     }
 }
 

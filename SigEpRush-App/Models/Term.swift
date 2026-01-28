@@ -22,6 +22,22 @@ struct CreateTermReq: Encodable {
     let name: String
     let code: String
     let inviteCode: String
-    let inviteExpiresAt: String?
-    let inviteMaxUses: Int?
+}
+
+struct TermAdminItem: Codable, Identifiable {
+    let id: String
+    let name: String
+    let code: String
+    let inviteCode: String?
+    let isActive: Bool
+    let memberCount: Int?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, name, code, inviteCode, isActive, memberCount
+    }
+}
+
+struct UpdateTermReq: Codable {
+    let name: String?
+    let isActive: Bool?
 }

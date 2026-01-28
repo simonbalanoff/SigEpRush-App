@@ -15,6 +15,7 @@ struct LoginView: View {
     @State private var password = ""
     @State private var err: String?
     @State private var loading = false
+    @State private var showRegister = false
 
     private var canSubmit: Bool {
         !email.isEmpty && !password.isEmpty && !loading
@@ -96,6 +97,15 @@ struct LoginView: View {
                     }
                     .disabled(!canSubmit)
 
+                    Button {
+                        showRegister = true
+                    } label: {
+                        Text("Don't have an account? Create one")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.white)
+                    }
+                    .padding(.top, 4)
+
                     Text("Only current SigEp members and rush leaders may sign in.")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.6))
@@ -120,6 +130,9 @@ struct LoginView: View {
             if canSubmit {
                 Task { await performLogin() }
             }
+        }
+        .fullScreenCover(isPresented: $showRegister) {
+            RegisterView()
         }
     }
 

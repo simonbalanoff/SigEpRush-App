@@ -34,140 +34,142 @@ struct TermsHomeView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color(.systemGroupedBackground)
-                    .ignoresSafeArea()
+        ZStack {
+            Color(.systemGroupedBackground)
+                .ignoresSafeArea()
 
-                VStack(spacing: 12) {
-                    VStack(spacing: 6) {
-                        HStack(spacing: 10) {
-                            Image("SigEpCrest")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 42, height: 42)
+            VStack(spacing: 12) {
+                VStack(spacing: 6) {
+                    HStack(spacing: 10) {
+                        Image("SigEpCrest")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 42, height: 42)
 
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("SigEp Rush")
-                                    .font(.headline.weight(.semibold))
-                                Text("Terms")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("SigEp Rush")
+                                .font(.headline.weight(.semibold))
+                            Text("Terms")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+                        
+                        HStack(spacing: 8) {
+                            layoutIcon(mode: .list, systemName: "list.bullet")
+
+                            layoutIcon(mode: .grid, systemName: "square.grid.2x2")
+
+                            Button {
+                                showJoin = true
+                            } label: {
+                                Image(systemName: "plus")
+                                    .imageScale(.medium)
+                                    .frame(width: 32, height: 32)
+                                    .foregroundStyle(SigEpTheme.purple)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color(.systemBackground))
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                                    )
                             }
 
-                            Spacer()
-                            
-                            HStack(spacing: 8) {
-                                layoutIcon(mode: .list, systemName: "list.bullet")
-
-                                layoutIcon(mode: .grid, systemName: "square.grid.2x2")
-
-                                Button {
-                                    showJoin = true
-                                } label: {
-                                    Image(systemName: "plus")
-                                        .imageScale(.medium)
-                                        .frame(width: 32, height: 32)
-                                        .foregroundStyle(SigEpTheme.purple)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 10)
-                                                .fill(Color(.systemBackground))
-                                        )
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 10)
-                                                .stroke(Color.black.opacity(0.06), lineWidth: 1)
-                                        )
-                                }
-
-                                Button {
-                                    ui.showSettings = true
-                                } label: {
-                                    Image(systemName: "gearshape.fill")
-                                        .imageScale(.medium)
-                                        .frame(width: 32, height: 32)
-                                        .foregroundStyle(SigEpTheme.purple)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 10)
-                                                .fill(Color(.systemBackground))
-                                        )
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 10)
-                                                .stroke(Color.black.opacity(0.06), lineWidth: 1)
-                                        )
-                                }
+                            Button {
+                                ui.showSettings = true
+                            } label: {
+                                Image(systemName: "gearshape.fill")
+                                    .imageScale(.medium)
+                                    .frame(width: 32, height: 32)
+                                    .foregroundStyle(SigEpTheme.purple)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color(.systemBackground))
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                                    )
                             }
                         }
-                        .padding(.horizontal)
-                        .padding(.top, 8)
-                        .padding(.bottom, 8)
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                    .padding(.bottom, 8)
 
-                        HStack(spacing: 12) {
-                            HStack {
-                                Image(systemName: "magnifyingglass")
-                                    .foregroundStyle(.secondary)
-                                TextField("Search terms", text: $search)
-                                    .textInputAutocapitalization(.never)
-                                    .autocorrectionDisabled(true)
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 10)
-                            .background(Color(.systemBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(SigEpTheme.purple.opacity(0.3), lineWidth: 1)
+                    HStack(spacing: 12) {
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundStyle(.secondary)
+                            TextField("Search terms", text: $search)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled(true)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 10)
+                        .background(Color(.systemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(SigEpTheme.purple.opacity(0.3), lineWidth: 1)
+                        )
+                        .frame(maxWidth: .infinity)
+
+                        
+                    }
+                    .padding(.horizontal)
+                }
+
+                Group {
+                    if loading {
+                        LoadingOverlay()
+                    } else if filteredTerms.isEmpty {
+                        if terms.isEmpty {
+                            EmptyStateView(
+                                title: "No Terms Yet",
+                                message: "Join your chapter's rush term to get started.",
+                                systemImage: "rectangle.stack.badge.plus",
+                                actionTitle: "Join Term",
+                                action: { showJoin = true }
                             )
-                            .frame(maxWidth: .infinity)
-
-                            
-                        }
-                        .padding(.horizontal)
-                    }
-
-                    Group {
-                        if loading {
-                            LoadingOverlay()
-                        } else if filteredTerms.isEmpty {
-                            if terms.isEmpty {
-                                EmptyStateView(
-                                    title: "No Terms Yet",
-                                    message: "Join your chapter’s rush term to get started.",
-                                    systemImage: "rectangle.stack.badge.plus",
-                                    actionTitle: "Join Term",
-                                    action: { showJoin = true }
-                                )
-                            } else {
-                                EmptyStateView(
-                                    title: "No Matches",
-                                    message: "No terms match your search. Try a different name or code.",
-                                    systemImage: "magnifyingglass.circle"
-                                )
-                            }
                         } else {
-                            switch layoutMode {
-                            case .list:
-                                listView
-                            case .grid:
-                                gridView
-                            }
+                            EmptyStateView(
+                                title: "No Matches",
+                                message: "No terms match your search. Try a different name or code.",
+                                systemImage: "magnifyingglass.circle"
+                            )
+                        }
+                    } else {
+                        switch layoutMode {
+                        case .list:
+                            listView
+                        case .grid:
+                            gridView
                         }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .task(id: ui.termsRefreshKey) {
-                await loadTerms()
+        }
+        .task(id: ui.termsRefreshKey) {
+            await loadTerms()
+        }
+        .onAppear {
+            // Clear last viewed term when user returns to terms home
+            ui.clearLastViewedTerm()
+        }
+        .sheet(isPresented: $showJoin) {
+            JoinTermView { _ in
+                Task { await loadTerms() }
             }
-            .sheet(isPresented: $showJoin) {
-                JoinTermView { _ in
-                    Task { await loadTerms() }
-                }
-                .environmentObject(api)
-            }
-            .navigationDestination(item: $selected) { t in
-                TermWorkspaceView(term: t)
-                    .navigationBarBackButtonHidden(true)
-            }
+            .environmentObject(api)
+        }
+        .navigationDestination(item: $selected) { t in
+            TermWorkspaceView(term: t)
+                .navigationBarBackButtonHidden(true)
         }
         .tint(SigEpTheme.purple)
     }

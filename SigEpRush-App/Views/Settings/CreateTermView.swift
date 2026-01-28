@@ -81,8 +81,6 @@ struct CreateTermView: View {
                 name: name,
                 code: code.lowercased(),
                 inviteCode: inviteCode,
-                inviteExpiresAt: iso,
-                inviteMaxUses: maxUses
             )
             _ = try await api.createTerm(payload)
             createdCode = inviteCode
